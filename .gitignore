@@ -1,0 +1,6 @@
+# Local Claude Code settings
+.claude/
+
+# macOS / Python clutter
+.DS_Store
+__pycache__/

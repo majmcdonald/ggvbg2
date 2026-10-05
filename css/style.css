@@ -1,0 +1,70 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: sans-serif;
+  color: #fff;
+}
+
+canvas {
+  display: block;
+  width: min(100vw, calc(100dvh * 704 / 864)); /* canvas CW / CH from js/config.js */
+  height: auto;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#name-dialog {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+#name-dialog[hidden] { display: none; }
+
+#name-dialog form {
+  background: #26263a;
+  border: 2px solid #2ecc71;
+  border-radius: 14px;
+  padding: 24px;
+  width: min(90vw, 380px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#name-dialog label { font-size: 22px; font-weight: bold; }
+
+#name-dialog input {
+  font-size: 22px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #555;
+  background: #1a1a2e;
+  color: #fff;
+}
+
+#name-dialog .buttons { display: flex; gap: 12px; justify-content: flex-end; }
+
+#name-dialog button {
+  font-size: 18px;
+  font-weight: bold;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  background: #27ae60;
+  cursor: pointer;
+}
+
+#name-dialog button[type="button"] { background: #555; }
