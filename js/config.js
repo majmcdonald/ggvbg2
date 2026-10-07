@@ -26,5 +26,9 @@ export const FAST_SPEED = 2;
 // Seconds a unit's attack swing lasts.
 export const ATTACK_ANIM_TIME = 0.25;
 
+// After beating a floor's last level: fireworks, then fade to black, then the next floor's title card.
+export const FIREWORKS_TIME = 3.5;
+export const DARKEN_TIME = 1.5;
+
 export function cellX(col) { return GRID_LEFT + col * CELL + CELL / 2; }
 export function cellY(row) { return GRID_TOP + row * CELL + CELL / 2; }

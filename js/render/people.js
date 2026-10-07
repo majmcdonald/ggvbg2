@@ -40,7 +40,8 @@ export function drawCharacter(ctx, id, side, x, y, size, anim = {}, outfit = nul
   const k = size / 64;
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(side === 'good' ? k : -k, k);
+  // Good guys face right and bad guys left, unless `flip` turns them around.
+  ctx.scale((side === 'good') !== !!anim.flip ? k : -k, k);
   if (look.object) drawObject(ctx, look.object, anim.t || 0, anim.attack || 0);
   else drawPerson(ctx, look, anim.t || 0, anim.attack || 0);
   ctx.restore();

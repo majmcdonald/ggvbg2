@@ -1,4 +1,5 @@
 import { GOOD_GUY_DEFS } from './data/goodGuys.js';
+import { LEVELS } from './data/levels.js';
 import { hasSave } from './save.js';
 import { askName, isNameDialogOpen } from './nameDialog.js';
 import {
@@ -15,10 +16,10 @@ import {
 } from './render/wardrobe.js';
 import { startWave } from './waves.js';
 import { hudButton, hudMenuButton, canChangeSpeed, sandboxSideButton, showSideButton } from './render/hud.js';
-import { FAST_SPEED } from './config.js';
+import { FAST_SPEED, FIREWORKS_TIME, DARKEN_TIME } from './config.js';
 import { cardAt } from './render/tray.js';
-import { cellAt } from './render/grid.js';
-import { menuButtons, wardrobeButton, savesButton, prepareCards, prepareStartButton, prepareBackButton, resultButtons } from './render/screens.js';
+import { cellAt, facingButtons } from './render/grid.js';
+import { menuButtons, wardrobeButton, savesButton, sandboxFloorButtons, prepareCards, prepareStartButton, prepareBackButton, resultButtons } from './render/screens.js';
 
 function inRect(x, y, r) {
   return x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
@@ -41,6 +42,12 @@ function handleTap(x, y) {
     if (introCanContinue()) startLevel(0);
     return;
   }
+  if (state.phase === 'floor_transition') {
+    // Only once the next floor's title card is up; then on to the next level.
+    const cardTime = state.transitionTime - FIREWORKS_TIME - DARKEN_TIME;
+    if (cardTime > 0 && introCanContinue(cardTime)) startLevel(state.levelIndex + 1);
+    return;
+  }
   if (state.phase === 'saves') return tapSaves(x, y);
   if (state.phase === 'menu') return tapMenu(x, y);
   if (state.phase === 'prepare') return tapPrepare(x, y);
@@ -53,6 +60,13 @@ function handleTap(x, y) {
     return;
   }
   if (inRect(x, y, hudButton)) return tapHudButton();
+
+  // Surround levels: turn the selected good guy with the arrows around it.
+  const turn = facingButtons().find(b => Math.hypot(x - b.x, y - b.y) <= b.r + 4);
+  if (turn) {
+    state.selection.unit.facing = turn.dir;
+    return;
+  }
 
   const cardId = cardAt(x, y);
   if (cardId) return tapCard(cardId);
@@ -77,13 +91,21 @@ function tapSaves(x, y) {
 }
 
 function tapMenu(x, y) {
+  if (state.sandboxPicker) {
+    const pick = sandboxFloorButtons().find(b => inRect(x, y, b));
+    if (pick?.floor) startLevel(pick.levelIndex, { floor: pick.floor });
+    else if (pick) state.sandboxPicker = false;
+    return;
+  }
   if (inRect(x, y, savesButton)) return openSaves();
   if (inRect(x, y, wardrobeButton)) {
     if (wardrobeUnlocked()) openWardrobe();
     return;
   }
   const b = menuButtons().find(b => inRect(x, y, b));
-  if (b && isUnlocked(b.levelIndex)) startLevel(b.levelIndex);
+  if (!b || !isUnlocked(b.levelIndex)) return;
+  if (LEVELS[b.levelIndex].sandbox) state.sandboxPicker = true;
+  else startLevel(b.levelIndex);
 }
 
 function tapWardrobe(x, y) {
@@ -128,7 +150,7 @@ function tapResult(x, y) {
   const b = resultButtons().find(b => inRect(x, y, b));
   if (!b) return;
   if (b.action === 'menu') goToMenu();
-  else if (b.action === 'retry') startLevel(state.levelIndex);
+  else if (b.action === 'retry') startLevel(state.levelIndex, state.levelOptions);
   else if (b.action === 'next') startLevel(nextLevelIndex());
 }
 

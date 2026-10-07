@@ -31,8 +31,12 @@ export const state = {
   battleTime: 0,  // seconds of fighting so far this level, all waves combined (game time)
   speed: 1,       // battle steps per frame; kept across waves, reset per level
   lostReason: '',
+  levelOptions: {},       // how the current level was started (kept for Retry)
+  sandboxPicker: false,   // menu: choosing the Sandbox floor
   bossUnit: null,         // boss levels: the boss, kept across waves
   introTime: 0,           // seconds into the new-save intro
+  transitionTime: 0,      // seconds into the fireworks + next-floor sequence
+  nextFloor: 0,
   coinsEarned: 0,         // shown on the level-complete screen
   wardrobeJustOpened: false,
   wardrobeUnit: null,     // good guy being dressed on the Wardrobe screen
@@ -46,11 +50,15 @@ export const state = {
   messageTime: 0,
 };
 
-export function startLevel(index) {
+// options.floor: Sandbox only, 1 (side by side) or 2 (bad guys all around).
+export function startLevel(index, options = {}) {
   // Copy so rocks smashed by Axe Man come back on replay.
   const level = structuredClone(LEVELS[index]);
+  if (level.sandbox && options.floor === 2) Object.assign(level, level.floor2);
   state.levelIndex = index;
+  state.levelOptions = options;
   state.level = level;
+  state.sandboxPicker = false;
   state.money = level.startMoney;
   state.wave = 0;
   state.goodGuys = [];
@@ -125,6 +133,12 @@ function beginPlacement(units) {
 
 export function completeLevel() {
   state.phase = 'level_won';
+  // Floor finales (Level 10) celebrate with fireworks, then show the next floor's title card.
+  if (state.level.nextFloor) {
+    state.phase = 'floor_transition';
+    state.nextFloor = state.level.nextFloor;
+    state.transitionTime = 0;
+  }
   state.coinsEarned = 0;
   state.wardrobeJustOpened = false;
   if (state.level.sandbox) return;
@@ -296,6 +310,7 @@ export function makeGoodGuy(id, row, col) {
   const hp = Math.round(def.hp * (1 + hpBonus(outfit)));
   return {
     id, row, col, hp, maxHp: hp, outfit, dmgMult: 1 + dmgBonus(outfit), powers: powersFor(outfit),
+    facing: 'right',   // surround levels: the side this good guy attacks
     cooldown: 0, hurt: 0, attackAnim: 0, slowTime: 0, incomeTimer: 0,
   };
 }
@@ -316,7 +331,7 @@ export function badGuyAt(row, col) {
 // Sandbox only: bad guys go on free cells in the enemy zone.
 export function canPlaceBad(row, col) {
   const level = state.level;
-  if (!level.sandbox || row < 0 || row >= ROWS || !inZone(level.enemyZone, col)) return false;
+  if (!level.sandbox || row < 0 || row >= ROWS || !inZone(level.enemyZone, row, col)) return false;
   if (isRock(level, row, col) || isPool(level, row, col)) return false;
   return !badGuyAt(row, col);
 }
@@ -337,14 +352,20 @@ export function placeFromCard(id, row, col) {
     addEffect('smash', cellX(col), cellY(row));
     return;
   }
-  state.goodGuys.push(makeGoodGuy(id, row, col));
+  const unit = makeGoodGuy(id, row, col);
+  // Surround levels: start facing out toward the nearest edge.
+  if (state.level.surround) {
+    const dr = row - 3.5, dc = col - 3.5;
+    unit.facing = Math.abs(dc) >= Math.abs(dr) ? (dc > 0 ? 'right' : 'left') : (dr > 0 ? 'down' : 'up');
+  }
+  state.goodGuys.push(unit);
 }
 
 export function canPlace(row, col, id) {
   const level = state.level;
   const def = GOOD_GUY_DEFS[id];
   if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return false;
-  if (!inZone(level.playerZone, col)) return false;
+  if (!inZone(level.playerZone, row, col)) return false;
   if (goodGuyAt(row, col)) return false;
   if (def.smashesRock) return isRock(level, row, col);
   if (isRock(level, row, col)) return false;

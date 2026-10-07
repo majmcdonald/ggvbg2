@@ -220,13 +220,16 @@ function apply(g, p) {
       return true;
     }
     case 'heal': {
-      // The boss's Weakness Curse stops cursed good guys from being healed.
-      const team = goodGroup(g, p.who).filter(u => u.hp < u.maxHp && !(u.cursed > 0));
-      if (!team.length) return false;
-      for (const u of team) {
+      const hurt = goodGroup(g, p.who).filter(u => u.hp < u.maxHp);
+      if (!hurt.length) return false;
+      // The boss's Weakness Curse wastes this turn for cursed good guys: no heal now, and
+      // no catching up once the curse wears off.
+      const healable = hurt.filter(u => !(u.cursed > 0));
+      for (const u of healable) {
         u.hp = Math.min(u.maxHp, u.hp + u.maxHp * p.amount);
         addEffect('ring', cellX(u.col), cellY(u.row), { radius: CELL * 0.45, color });
       }
+      if (!healable.length) label(g, 'Cursed! No heal', '#ab47bc');
       return true;
     }
     case 'shield':

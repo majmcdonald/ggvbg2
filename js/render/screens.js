@@ -47,6 +47,30 @@ export function menuButtons() {
   }));
 }
 
+// Sandbox: choose which floor's layout to play on.
+export function sandboxFloorButtons() {
+  const levelIndex = LEVELS.findIndex(l => l.sandbox);
+  const w = 420, h = 74, x = CW / 2 - w / 2;
+  return [
+    { x, y: CH / 2 - 110, w, h, levelIndex, floor: 1, label: 'Floor 1: Side by Side' },
+    { x, y: CH / 2 - 20, w, h, levelIndex, floor: 2, label: 'Floor 2: Bad Guys All Around' },
+    { x: CW / 2 - 90, y: CH / 2 + 80, w: 180, h: 48, label: 'Cancel' },
+  ];
+}
+
+function drawSandboxPicker(ctx) {
+  ctx.fillStyle = 'rgba(0,0,0,0.8)';
+  ctx.fillRect(0, 0, CW, CH);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 30px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Sandbox: pick a floor', CW / 2, CH / 2 - 170);
+  for (const b of sandboxFloorButtons()) {
+    drawButton(ctx, b, b.floor === 1 ? '#2980b9' : b.floor === 2 ? '#8e44ad' : '#555', b.floor ? 'bold 22px sans-serif' : 'bold 18px sans-serif');
+  }
+}
+
 export function drawMenu(ctx) {
   ctx.fillStyle = '#1a1a2e';
   ctx.fillRect(0, 0, CW, CH);
@@ -83,6 +107,8 @@ export function drawMenu(ctx) {
 
   const name = saveName(state.slot, state.progress);
   drawButton(ctx, { ...savesButton, label: name.length > 12 ? `${name.slice(0, 11)}...` : name }, '#555', 'bold 15px sans-serif');
+
+  if (state.sandboxPicker) drawSandboxPicker(ctx);
 }
 
 export const savesButton = { x: 16, y: 12, w: 150, h: 40 };

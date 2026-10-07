@@ -7,6 +7,16 @@ const t = (row, col) => ({ type: 'tripleboom', row, col });
 const k = (row, col) => ({ type: 'karate', row, col });
 const boss = (row, col) => ({ type: 'skeletonboss', row, col });
 
+// Levels 11+: the good guys hold a 4x4 square in the middle, bad guys stand all around it.
+const MIDDLE = { colMin: 2, colMax: 5, rowMin: 2, rowMax: 5 };
+const SURROUND = {
+  surround: true,
+  playerZone: MIDDLE,
+  enemyZone: { colMin: 0, colMax: 7, rowMin: 0, rowMax: 7, outside: MIDDLE },
+  rocks: [],
+  pools: [],
+};
+
 export const LEVELS = [
   {
     number: 1,
@@ -149,6 +159,8 @@ export const LEVELS = [
     // Boss level: the Giant Skeleton is there all level. Each wave ends when his HP drops to
     // the next break (2/3, then 1/3), giving a break to add good guys. Defeating him wins.
     boss: { ...boss(3, 6), breaks: [2 / 3, 1 / 3] },
+    // Beating this level shows fireworks, then the Floor 2 title card.
+    nextFloor: 2,
     waves: [
       { spawns: [n(1, 5), n(5, 5), s(7, 7)] },
       { spawns: [n(1, 5), n(5, 5), s(0, 7), s(7, 7)] },
@@ -156,47 +168,40 @@ export const LEVELS = [
     ],
   },
   {
+    // From here on the good guys hold the middle and bad guys come from every side.
+    // Good guys only attack the side they face (see SURROUND above).
     number: 11,
-    startMoney: 500,
+    startMoney: 600,
     newUnits: ['minibomb'],
-    playerZone: { colMin: 0, colMax: 3 },
-    enemyZone: { colMin: 4, colMax: 7 },
-    rocks: [],
-    pools: [],
+    ...SURROUND,
     waves: [
-      { spawns: [n(2, 4), n(3, 4), n(2, 5), n(3, 5), s(6, 7)] },
-      { spawns: [n(5, 4), n(6, 4), n(5, 5), n(6, 5), n(1, 4), s(0, 7)] },
-      { spawns: [n(0, 4), n(1, 4), n(0, 5), n(1, 5), n(5, 4), n(6, 4), n(5, 5), s(3, 7)] },
+      { spawns: [n(0, 3), n(3, 7), n(7, 4), n(4, 0)] },
+      { spawns: [n(1, 2), s(3, 7), n(4, 6), s(7, 4), n(4, 0)] },
+      { spawns: [n(0, 3), s(0, 6), n(3, 6), s(7, 1), n(6, 4), n(2, 0)] },
     ],
   },
   {
     number: 12,
-    startMoney: 400,
+    startMoney: 650,
     newUnits: ['wallofdoom'],
-    playerZone: { colMin: 0, colMax: 3 },
-    enemyZone: { colMin: 4, colMax: 7 },
-    rocks: [{ row: 0, col: 3 }, { row: 7, col: 3 }],
-    pools: [],
+    ...SURROUND,
     waves: [
-      { spawns: [n(2, 4), n(3, 4), n(4, 4), n(5, 4), s(3, 6), s(4, 6)] },
-      { spawns: [n(1, 4), n(2, 4), n(3, 4), n(4, 4), n(5, 4), n(6, 4), s(2, 6), s(5, 6)] },
-      { spawns: [n(0, 4), n(1, 4), n(2, 4), n(3, 4), n(4, 4), n(5, 4), n(6, 4), n(7, 4), s(1, 6), s(3, 6), s(6, 6)] },
+      { spawns: [n(1, 3), n(3, 6), n(6, 4), n(4, 1)] },
+      { spawns: [n(1, 2), n(3, 6), n(5, 6), n(6, 3), n(4, 1), s(0, 7)] },
+      { spawns: [n(1, 2), n(1, 5), n(3, 6), n(4, 6), n(6, 2), n(5, 1), s(0, 0), s(7, 7)] },
     ],
   },
   {
-    // Finale: bad guys line up in rows for the Thrower.
+    // Finale: bad guys line up in rows on the left and right for the Thrower.
     number: 13,
-    startMoney: 650,
+    startMoney: 800,
     newUnits: ['thrower'],
-    playerZone: { colMin: 0, colMax: 3 },
-    enemyZone: { colMin: 4, colMax: 7 },
-    rocks: [],
-    pools: [],
+    ...SURROUND,
     waves: [
-      { spawns: [n(2, 4), n(2, 5), n(2, 6), n(5, 4), n(5, 5)] },
-      { spawns: [n(1, 4), n(1, 5), n(1, 6), n(6, 4), n(6, 5), n(6, 6), s(3, 7)] },
-      { spawns: [n(0, 4), n(0, 5), n(3, 4), n(3, 5), n(3, 6), n(7, 4), n(7, 5), s(1, 7), s(5, 7)] },
-      { spawns: [n(2, 4), n(2, 5), n(2, 6), n(4, 4), n(4, 5), n(4, 6), n(6, 4), n(6, 5), s(0, 7)] },
+      { spawns: [n(2, 6), n(2, 7), n(5, 0), n(5, 1)] },
+      { spawns: [n(3, 6), n(3, 7), n(4, 0), n(4, 1), n(1, 3), s(7, 7)] },
+      { spawns: [n(2, 6), n(2, 7), n(5, 6), n(5, 7), n(2, 0), n(2, 1), s(0, 0), s(7, 4)] },
+      { spawns: [n(2, 6), n(3, 6), n(4, 6), n(2, 1), n(3, 1), n(4, 1), s(0, 3), s(7, 4), s(0, 7), s(7, 0)] },
     ],
   },
   {
@@ -215,6 +220,14 @@ export const LEVELS = [
     waves: [
       { spawns: [n(1, 4), n(3, 5), n(5, 4), s(2, 7), g(6, 7)] },
     ],
+    // Picking Floor 2 swaps in the surround layout and its own starting bad guys.
+    floor2: {
+      name: 'Sandbox Floor 2',
+      ...SURROUND,
+      waves: [
+        { spawns: [n(1, 3), n(3, 6), n(6, 4), n(4, 1), s(0, 7)] },
+      ],
+    },
   },
 ];
 

@@ -1,4 +1,5 @@
 import { CELL, COLS, cellX, cellY, ATTACK_ANIM_TIME } from './config.js';
+import { inFacing } from './data/terrain.js';
 import { GOOD_GUY_DEFS } from './data/goodGuys.js';
 import { BAD_GUY_DEFS } from './data/badGuys.js';
 import { state, flash, addEffect, completeLevel } from './state.js';
@@ -53,7 +54,13 @@ function defsOf(side) {
 export function isGuarding(wall) {
   return state.goodGuys.some(g => {
     const def = GOOD_GUY_DEFS[g.id];
-    return g !== wall && g.hp > 0 && g.row === wall.row && g.col < wall.col && !def.guards && !def.untargetable;
+    if (g === wall || g.hp <= 0 || def.guards || def.untargetable) return false;
+    if (!state.level?.surround) return g.row === wall.row && g.col < wall.col;
+    // Surround levels: "behind" means on the wall's inner side, toward the middle.
+    const mid = 3.5;
+    if (g.row === wall.row) return Math.abs(g.col - mid) < Math.abs(wall.col - mid);
+    if (g.col === wall.col) return Math.abs(g.row - mid) < Math.abs(wall.row - mid);
+    return false;
   });
 }
 
@@ -67,8 +74,15 @@ function targetsFor(side) {
   });
 }
 
-function chooseTarget(u, def, side) {
+// Surround levels: good guys only attack bad guys on the side they face (bombs blow up all around).
+function attackable(u, def, side) {
   const targets = targetsFor(side);
+  if (side !== 'good' || !state.level?.surround || def.explodes) return targets;
+  return targets.filter(t => inFacing(u, t, u.facing));
+}
+
+function chooseTarget(u, def, side) {
+  const targets = attackable(u, def, side);
   // Row attackers fire down their own row, so walls in other rows can't pull them away.
   if (side === 'bad' && def.targeting !== 'row') {
     const taunt = findTarget(u, def.range, targets.filter(g => GOOD_GUY_DEFS[g.id].taunt));
@@ -209,7 +223,7 @@ function attack(u, def, side, target) {
   const aimed = [target];
   for (let i = 0; i < (def.throws || 1); i++) {
     if (i > 0) {
-      const next = findTarget(u, def.range, targetsFor(side).filter(t => !aimed.includes(t)));
+      const next = findTarget(u, def.range, attackable(u, def, side).filter(t => !aimed.includes(t)));
       if (!next) break;
       aimed.push(next);
     }

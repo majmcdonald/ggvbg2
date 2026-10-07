@@ -2,6 +2,48 @@ import { ROWS, COLS, CELL, GRID_TOP, GRID_LEFT, WALL, cellX, cellY } from '../co
 import { GOOD_GUY_DEFS } from '../data/goodGuys.js';
 import { state, canPlace, canPlaceBad } from '../state.js';
 import { drawFloaty } from './people.js';
+import { inZone } from '../data/terrain.js';
+
+const DIRS = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] };
+
+// Surround levels: the 4 turn arrows around the selected good guy.
+export function facingButtons() {
+  const u = state.selection?.unit;
+  if (!u || !state.level?.surround || (state.phase !== 'placement' && state.phase !== 'battle')) return [];
+  return Object.entries(DIRS).map(([dir, [dr, dc]]) => ({
+    dir, x: cellX(u.col) + dc * CELL * 0.62, y: cellY(u.row) + dr * CELL * 0.62, r: 17,
+  }));
+}
+
+export function drawFacingButtons(ctx) {
+  const u = state.selection?.unit;
+  for (const b of facingButtons()) {
+    const on = u.facing === b.dir;
+    ctx.fillStyle = on ? '#f1c40f' : 'rgba(30,30,30,0.85)';
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    drawArrow(ctx, b.x, b.y, b.dir, 9, on ? '#111' : '#fff');
+  }
+}
+
+export function drawArrow(ctx, x, y, dir, size, color) {
+  const angle = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 }[dir];
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(size, 0);
+  ctx.lineTo(-size * 0.6, -size * 0.8);
+  ctx.lineTo(-size * 0.6, size * 0.8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
 
 export function drawGrid(ctx) {
   const level = state.level;
@@ -133,10 +175,24 @@ function drawCastleFloor(ctx) {
 
 // Tinted floor plus a line on the edge that faces the other side.
 function drawZone(ctx, zone, tint, edge) {
+  ctx.fillStyle = tint;
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (inZone(zone, r, c)) ctx.fillRect(GRID_LEFT + c * CELL, GRID_TOP + r * CELL, CELL, CELL);
+    }
+  }
+  if (zone.outside) return;
   const x0 = GRID_LEFT + zone.colMin * CELL;
   const x1 = GRID_LEFT + (zone.colMax + 1) * CELL;
-  ctx.fillStyle = tint;
-  ctx.fillRect(x0, GRID_TOP, x1 - x0, GRID_H);
+  if (zone.rowMin !== undefined) {
+    // A square in the middle: dashed outline all the way round.
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = 4;
+    ctx.setLineDash([14, 8]);
+    ctx.strokeRect(x0 + 2, GRID_TOP + zone.rowMin * CELL + 2, x1 - x0 - 4, (zone.rowMax - zone.rowMin + 1) * CELL - 4);
+    ctx.setLineDash([]);
+    return;
+  }
   const edgeX = zone.colMin === 0 ? x1 - 2 : x0 + 2;
   ctx.strokeStyle = edge;
   ctx.lineWidth = 4;

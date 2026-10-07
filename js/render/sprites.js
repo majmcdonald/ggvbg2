@@ -1,6 +1,7 @@
 import { CELL, cellX, cellY, ATTACK_ANIM_TIME } from '../config.js';
 import { state } from '../state.js';
 import { drawCharacter } from './people.js';
+import { drawArrow } from './grid.js';
 
 // Hats and weapons may poke above the cell; the HP bar sits under the feet.
 const BODY_SIZE = CELL * 0.95;
@@ -21,9 +22,19 @@ export function drawUnit(ctx, unit, def, side, selected) {
   // Bosses are drawn twice as big, standing on their cell.
   const size = def.boss ? BODY_SIZE * 2 : BODY_SIZE;
   const dy = def.boss ? BODY_DY - BODY_SIZE / 2 + 4 : BODY_DY;
+  // Surround levels: good guys look the way they face; bad guys turn toward the middle.
+  const surround = state.level?.surround;
+  const flip = surround && (side === 'good' ? unit.facing === 'left' : unit.col < 3.5);
+  if (surround && side === 'good' && !def.explodes && !def.guards) {
+    // Small arrow on the side this good guy faces.
+    // Up/down arrows sit beside the body so the head and legs don't hide them.
+    const [ax, ay] = { up: [26, -14], down: [26, 8], left: [-31, -2], right: [31, -2] }[unit.facing];
+    drawArrow(ctx, x + ax, y + ay, unit.facing, 8, '#f1c40f');
+  }
   drawCharacter(ctx, def.id, side, x, y + dy, size, {
     t: state.time + unit.row * 0.7 + unit.col * 0.3,
     attack: unit.attackAnim > 0 ? unit.attackAnim / ATTACK_ANIM_TIME : 0,
+    flip,
   }, unit.outfit);
 
   if (unit.hurt > 0) {
