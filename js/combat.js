@@ -1,10 +1,11 @@
 import { CELL, COLS, cellX, cellY, ATTACK_ANIM_TIME } from './config.js';
 import { GOOD_GUY_DEFS } from './data/goodGuys.js';
 import { BAD_GUY_DEFS } from './data/badGuys.js';
-import { state, flash, addEffect } from './state.js';
-import { onWaveCleared } from './waves.js';
+import { state, flash, addEffect, completeLevel } from './state.js';
+import { onWaveCleared, bossBreakReached } from './waves.js';
 import { earn, updateIncome } from './economy.js';
 import { applyDamage, updatePowers, updateStatuses } from './powers.js';
+import { updateBosses, updateSkull, isBoss } from './boss.js';
 
 const STALEMATE_HINT_AFTER = 3;
 const SLOW_FACTOR = 0.5;
@@ -81,6 +82,7 @@ export function updateBattle(dt) {
   if (!state.stalled) updateIncome(dt);
   updateStatuses(dt);
   updatePowers(dt);
+  updateBosses(dt);
   runSide('good', dt);
   runSide('bad', dt);
   updateProjectiles(dt);
@@ -95,7 +97,14 @@ export function updateBattle(dt) {
     loseLevel('No fighters left to defeat the bad guys.');
     return;
   }
-  if (state.badGuys.length === 0) {
+  // Boss levels: defeating the boss wins; reaching a break ends the wave.
+  if (state.bossUnit && state.bossUnit.hp <= 0) {
+    state.projectiles = [];
+    state.badGuys = [];
+    completeLevel();
+    return;
+  }
+  if (state.badGuys.length === 0 || bossBreakReached()) {
     state.projectiles = [];
     onWaveCleared();
     return;
@@ -247,6 +256,12 @@ function updateProjectiles(dt) {
       updateBall(p, step);
       continue;
     }
+    // A boss skull lands where its target stood; it only hurts them if they're still there.
+    if (p.kind === 'skull') {
+      const t = p.target;
+      if (updateSkull(p, step) && t.hp > 0 && t.row === p.trow && t.col === p.tcol) hit(t, p.def, 1, p.owner);
+      continue;
+    }
 
     const dest = p.returning ? p.owner : p.target;
     const dx = cellX(dest.col) - p.x;
@@ -321,6 +336,8 @@ function removeDefeated() {
 
 function sideCanAttack(side) {
   const defs = defsOf(side);
+  // A boss acts on its own timer, so a fight with one is never stuck.
+  if (side === 'bad' && state.badGuys.some(isBoss)) return true;
   return unitsOf(side).some(u => defs[u.id].dmg && chooseTarget(u, defs[u.id], side));
 }
 

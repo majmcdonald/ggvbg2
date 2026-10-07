@@ -26,6 +26,14 @@ export const BAD_GUY_DEFS = {
     combo: { hits: 5, gap: 0.15 }, punchColor: '#ffeb3b',
     color: '#ecf0f1',
   },
+  // Level 10 boss. Doesn't attack normally: every few seconds it does one of its
+  // actions (see js/boss.js). Drawn twice as big. Immune to suck, stun and charm.
+  skeletonboss: {
+    id: 'skeletonboss', name: 'Giant Skeleton', short: 'Skeleton Boss',
+    hp: 6500, range: 0, dmg: 0, fireRate: 0, reward: 200, boss: true,
+    actionEvery: 3, angryEvery: 2,
+    color: '#e0e0e0',
+  },
   // Rolls an invisible ball along its row. The ball passes through the first good guy it
   // reaches without hurting them, turns visible, and hits the next one.
   ghostball: {

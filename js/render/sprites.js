@@ -18,7 +18,10 @@ export function drawUnit(ctx, unit, def, side, selected) {
     ctx.stroke();
   }
 
-  drawCharacter(ctx, def.id, side, x, y + BODY_DY, BODY_SIZE, {
+  // Bosses are drawn twice as big, standing on their cell.
+  const size = def.boss ? BODY_SIZE * 2 : BODY_SIZE;
+  const dy = def.boss ? BODY_DY - BODY_SIZE / 2 + 4 : BODY_DY;
+  drawCharacter(ctx, def.id, side, x, y + dy, size, {
     t: state.time + unit.row * 0.7 + unit.col * 0.3,
     attack: unit.attackAnim > 0 ? unit.attackAnim / ATTACK_ANIM_TIME : 0,
   }, unit.outfit);
@@ -40,7 +43,7 @@ export function drawUnit(ctx, unit, def, side, selected) {
     ctx.setLineDash([]);
   }
 
-  drawHpBar(ctx, x, y + CELL / 2 - 5, unit.hp / unit.maxHp);
+  if (!def.boss) drawHpBar(ctx, x, y + CELL / 2 - 5, unit.hp / unit.maxHp);
 }
 
 function drawHpBar(ctx, x, y, frac) {
@@ -82,6 +85,18 @@ function drawStatuses(ctx, u, x, y) {
     }
   }
   if (u.charm > 0) drawHeart(ctx, x, y - 46, 6, '#f48fb1');
+  if (u.cursed > 0) {
+    // Crossed-out green plus: this good guy can't be healed right now.
+    const cx = x + 22, cy = y - 34;
+    ctx.fillStyle = '#66bb6a';
+    ctx.fillRect(cx - 6, cy - 2, 12, 4);
+    ctx.fillRect(cx - 2, cy - 6, 4, 12);
+    ctx.strokeStyle = '#ab47bc';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(cx - 8, cy + 8); ctx.lineTo(cx + 8, cy - 8);
+    ctx.stroke();
+  }
   if (u.shield > 0) {
     ctx.fillStyle = 'rgba(128,222,234,0.2)';
     ctx.strokeStyle = 'rgba(128,222,234,0.9)';

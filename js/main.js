@@ -6,12 +6,13 @@ import { initInput } from './input.js';
 import { updateBattle } from './combat.js';
 import { drawProjectiles, drawEffects } from './render/effects.js';
 import { drawGrid } from './render/grid.js';
-import { drawHud } from './render/hud.js';
+import { drawHud, drawBossBar } from './render/hud.js';
 import { drawTray } from './render/tray.js';
 import { drawUnit } from './render/sprites.js';
 import { drawMenu, drawPrepare, drawResult, drawMessage } from './render/screens.js';
 import { drawWardrobe } from './render/wardrobe.js';
 import { drawSaves } from './render/saves.js';
+import { drawIntro } from './render/intro.js';
 
 const canvas = document.getElementById('canvas');
 canvas.width = CW;
@@ -22,6 +23,7 @@ initInput(canvas);
 
 function update(dt) {
   state.time += dt;
+  if (state.phase === 'intro') state.introTime += dt;
   if (state.messageTime > 0) state.messageTime -= dt;
   // Speed-up runs extra fixed steps rather than a bigger dt, so hits land the same way.
   const steps = state.phase === 'battle' ? state.speed : 1;
@@ -40,6 +42,10 @@ function step(dt) {
 }
 
 function draw() {
+  if (state.phase === 'intro') {
+    drawIntro(ctx);
+    return;
+  }
   if (state.phase === 'saves') {
     drawSaves(ctx);
     drawMessage(ctx);
@@ -67,6 +73,7 @@ function draw() {
   for (const b of state.badGuys) drawUnit(ctx, b, BAD_GUY_DEFS[b.id], 'bad', false);
   drawProjectiles(ctx);
   drawEffects(ctx);
+  drawBossBar(ctx);
   drawMessage(ctx);
 
   if (state.phase === 'level_won' || state.phase === 'level_lost') drawResult(ctx);

@@ -5,7 +5,22 @@ export function drawProjectiles(ctx) {
   for (const p of state.projectiles) {
     ctx.save();
     ctx.translate(p.x, p.y);
-    if (p.kind === 'ghostball') {
+    if (p.kind === 'skull') {
+      ctx.rotate(Math.sin(p.angle) * 0.4);
+      ctx.fillStyle = '#eeeeee';
+      ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill();
+      ctx.fillRect(-5, 5, 10, 5);
+      ctx.fillStyle = '#212121';
+      ctx.beginPath(); ctx.arc(-3.5, -1, 2.6, 0, Math.PI * 2); ctx.arc(3.5, -1, 2.6, 0, Math.PI * 2); ctx.fill();
+    } else if (p.kind === 'bone') {
+      ctx.rotate(state.time * 14);
+      ctx.strokeStyle = '#eeeeee';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-12, 0); ctx.lineTo(12, 0); ctx.stroke();
+      ctx.fillStyle = '#eeeeee';
+      for (const x of [-12, 12]) for (const y of [-3, 3]) { ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill(); }
+    } else if (p.kind === 'ghostball') {
       // Invisible until it has passed through someone.
       if (!p.invisible) {
         ctx.fillStyle = 'rgba(186,104,200,0.4)';
@@ -70,7 +85,7 @@ export function drawEffects(ctx) {
       ctx.fillStyle = e.color;
       ctx.strokeStyle = '#000';
       ctx.lineWidth = 3;
-      ctx.font = 'bold 14px sans-serif';
+      ctx.font = e.big ? 'bold 22px sans-serif' : 'bold 14px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const y = e.y - k * 24;

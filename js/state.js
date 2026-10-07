@@ -31,6 +31,8 @@ export const state = {
   battleTime: 0,  // seconds of fighting so far this level, all waves combined (game time)
   speed: 1,       // battle steps per frame; kept across waves, reset per level
   lostReason: '',
+  bossUnit: null,         // boss levels: the boss, kept across waves
+  introTime: 0,           // seconds into the new-save intro
   coinsEarned: 0,         // shown on the level-complete screen
   wardrobeJustOpened: false,
   wardrobeUnit: null,     // good guy being dressed on the Wardrobe screen
@@ -61,6 +63,9 @@ export function startLevel(index) {
   state.speed = 1;
   state.trayMode = 'good';
   if (level.sandbox) state.badGuys = level.waves[0].spawns.map(sp => makeBadGuy(sp.type, sp.row, sp.col));
+  // A boss level's boss is on the field from the start, even while placing.
+  state.bossUnit = level.boss ? makeBadGuy(level.boss.type, level.boss.row, level.boss.col) : null;
+  if (state.bossUnit) state.badGuys = [state.bossUnit];
 
   const available = unitsForLevel(index);
   if (level.sandbox || available.length <= MAX_LOADOUT) {
@@ -228,11 +233,13 @@ export function saveName(slot, progress = loadProgress(slot)) {
   return progress.name || `Save ${slot}`;
 }
 
-// Starts a new game in an empty slot under the given name.
+// Starts a new game in an empty slot under the given name, then plays the intro.
 export function createSave(slot, name) {
   chooseSave(slot);
   state.progress.name = name;
   saveProgress(slot, state.progress);
+  state.introTime = 0;
+  state.phase = 'intro';
 }
 
 export function renameSave(slot, name) {

@@ -27,6 +27,7 @@ const BAD_LOOKS = {
   spear:  { skin: SKIN[2], hair: '#212121', hairStyle: 'short', hat: 'hornhelmet', hatColor: '#4a235a', shirt: '#6c3483', pants: '#1c1c1c', belt: '#111', item: 'spear', angry: true },
   tripleboom: { skin: SKIN[3], hair: '#212121', hairStyle: 'spiky', hat: 'headband', hatColor: '#212121', shirt: '#d35400', pants: '#3e2723', belt: '#212121', item: 'boomerang', backItem: 'boomerang', beltItem: 'boomerang', angry: true },
   karate: { skin: SKIN[1], hair: '#212121', hairStyle: 'short', hat: 'headband', hatColor: '#c0392b', shirt: '#f5f5f5', pants: '#f5f5f5', belt: '#111', gi: true, angry: true },
+  skeletonboss: { object: 'skeleton' },
   ghostball: { skin: SKIN[4], hair: '#212121', hairStyle: 'short', hat: 'hood', hatColor: '#004d40', mask: true, shirt: '#00897b', pants: '#263238', belt: '#004d40', item: 'magicball', angry: true },
 };
 
@@ -40,7 +41,7 @@ export function drawCharacter(ctx, id, side, x, y, size, anim = {}, outfit = nul
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(side === 'good' ? k : -k, k);
-  if (look.object) drawObject(ctx, look.object, anim.t || 0);
+  if (look.object) drawObject(ctx, look.object, anim.t || 0, anim.attack || 0);
   else drawPerson(ctx, look, anim.t || 0, anim.attack || 0);
   ctx.restore();
 }
@@ -1204,7 +1205,11 @@ function drawItem(ctx, item, x, y, rot) {
   ctx.restore();
 }
 
-function drawObject(ctx, kind, t) {
+function drawObject(ctx, kind, t, attack = 0) {
+  if (kind === 'skeleton') {
+    drawSkeleton(ctx, t, attack);
+    return;
+  }
   if (kind === 'floaty') {
     drawFloaty(ctx, t);
     return;
@@ -1272,4 +1277,64 @@ export function drawFloaty(ctx, t = 0) {
   ctx.beginPath();
   ctx.ellipse(0, 12 + bob, 21, 8, 0, Math.PI * 1.1, Math.PI * 1.45);
   ctx.stroke();
+}
+
+// Giant Skeleton boss: big skull with glowing eyes, ribcage, bony arms (raised when acting).
+function drawSkeleton(ctx, t, attack) {
+  const BONE = '#eeeeee', DARK = '#212121';
+  const sway = Math.sin(t * 2) * 1.2;
+  ellipse(ctx, 0, 29, 20, 4, 'rgba(0,0,0,0.35)');
+
+  // Legs and feet
+  for (const x of [-6, 6]) {
+    limb(ctx, x, 8, x * 1.2, 26, 3.5, BONE);
+    ellipse(ctx, x * 1.2 + 2, 27.5, 4.5, 2, BONE);
+  }
+  ctx.save();
+  ctx.translate(sway, 0);
+
+  // Spine and pelvis
+  limb(ctx, 0, -10, 0, 8, 3, BONE);
+  ellipse(ctx, 0, 8, 9, 4, BONE);
+  ellipse(ctx, 0, 8, 4, 2, DARK);
+
+  // Ribcage
+  ctx.strokeStyle = BONE;
+  ctx.lineWidth = 2.5;
+  for (let i = 0; i < 4; i++) {
+    const y = -9 + i * 4, w = 11 - i * 1.5;
+    ctx.beginPath();
+    ctx.ellipse(0, y, w, 2.5, 0, Math.PI * 0.1, Math.PI * 0.9);
+    ctx.stroke();
+  }
+
+  // Arms: raised overhead while acting
+  const lift = attack * 1.6;
+  for (const dir of [-1, 1]) {
+    const sx = dir * 11, sy = -10;
+    const ex = sx + dir * (6 - lift * 2), ey = sy + 10 - lift * 14;
+    const hx = ex + dir * (2 + lift), hy = ey + 9 - lift * 12;
+    limb(ctx, sx, sy, ex, ey, 3, BONE);
+    limb(ctx, ex, ey, hx, hy, 2.5, BONE);
+    for (let f = -1; f <= 1; f++) limb(ctx, hx, hy, hx + dir * 2 + f * 1.5, hy + (lift > 0.5 ? -4 : 4), 1.2, BONE);
+  }
+
+  // Skull with a cracked bone crown
+  ellipse(ctx, 0, -23, 12, 11, BONE);
+  ctx.fillStyle = BONE;
+  ctx.fillRect(-6, -15, 12, 6);
+  const glow = 0.7 + Math.sin(t * 6) * 0.3;
+  ellipse(ctx, -4.5, -24, 3.5, 4, DARK);
+  ellipse(ctx, 4.5, -24, 3.5, 4, DARK);
+  ellipse(ctx, -4.5, -24, 1.6, 1.8, `rgba(255,23,68,${glow})`);
+  ellipse(ctx, 4.5, -24, 1.6, 1.8, `rgba(255,23,68,${glow})`);
+  ctx.fillStyle = DARK;
+  ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(-1.5, -17); ctx.lineTo(1.5, -17); ctx.fill();
+  for (let x = -4.5; x <= 4.5; x += 3) ctx.fillRect(x - 0.4, -14, 0.8, 4);
+  ctx.fillStyle = '#9e9e9e';
+  ctx.beginPath();
+  ctx.moveTo(-9, -32); ctx.lineTo(-8, -40); ctx.lineTo(-4, -35); ctx.lineTo(0, -42);
+  ctx.lineTo(4, -35); ctx.lineTo(8, -40); ctx.lineTo(9, -32);
+  ctx.fill();
+  ctx.restore();
 }

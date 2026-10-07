@@ -5,6 +5,7 @@ const s = (row, col) => ({ type: 'spear', row, col });
 const g = (row, col) => ({ type: 'ghostball', row, col });
 const t = (row, col) => ({ type: 'tripleboom', row, col });
 const k = (row, col) => ({ type: 'karate', row, col });
+const boss = (row, col) => ({ type: 'skeletonboss', row, col });
 
 export const LEVELS = [
   {
@@ -138,16 +139,20 @@ export const LEVELS = [
   },
   {
     number: 10,
-    startMoney: 450,
+    startMoney: 500,
     newUnits: ['floaty'],
+    newBadGuys: ['skeletonboss'],
     playerZone: { colMin: 0, colMax: 3 },
     enemyZone: { colMin: 5, colMax: 7 },
     rocks: [],
     pools: [{ row: 2, col: 2, w: 2, h: 4 }],
+    // Boss level: the Giant Skeleton is there all level. Each wave ends when his HP drops to
+    // the next break (2/3, then 1/3), giving a break to add good guys. Defeating him wins.
+    boss: { ...boss(3, 6), breaks: [2 / 3, 1 / 3] },
     waves: [
-      { spawns: [n(3, 5), n(4, 5), s(1, 7), s(6, 7)] },
-      { spawns: [n(2, 5), n(3, 5), n(4, 5), n(5, 5), s(3, 7)] },
-      { spawns: [n(1, 5), n(3, 5), n(4, 5), n(6, 5), s(0, 7), s(3, 7), s(7, 7)] },
+      { spawns: [n(1, 5), n(5, 5), s(7, 7)] },
+      { spawns: [n(1, 5), n(5, 5), s(0, 7), s(7, 7)] },
+      { spawns: [n(0, 5), n(1, 5), n(5, 5), s(0, 7), s(7, 7)] },
     ],
   },
   {

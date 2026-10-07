@@ -1,5 +1,6 @@
 import { cellX, cellY, CELL } from './config.js';
 import { GOOD_GUY_DEFS } from './data/goodGuys.js';
+import { BAD_GUY_DEFS } from './data/badGuys.js';
 import { state, addEffect } from './state.js';
 import { earn } from './economy.js';
 
@@ -42,7 +43,7 @@ export function applyDamage(target, amount, attacker = null) {
     attacker.hurt = 0.15;
   }
   const steal = passive(attacker, 'lifesteal');
-  if (steal) attacker.hp = Math.min(attacker.maxHp, attacker.hp + amount * steal.amount);
+  if (steal && !(attacker.cursed > 0)) attacker.hp = Math.min(attacker.maxHp, attacker.hp + amount * steal.amount);
 
   if (target.hp <= 0) lastStand(target);
 }
@@ -65,7 +66,7 @@ export function resetWavePowers(unit) {
 
 export function updateStatuses(dt) {
   for (const u of [...state.goodGuys, ...state.badGuys]) {
-    for (const key of ['stun', 'shield', 'charm', 'weak', 'rage', 'slowTime']) {
+    for (const key of ['stun', 'shield', 'charm', 'weak', 'cursed', 'rage', 'slowTime']) {
       if (u[key] > 0) u[key] -= dt;
     }
     if (u.poison?.t > 0) {
@@ -73,7 +74,7 @@ export function updateStatuses(dt) {
       u.poison.t -= dt;
     }
     const regen = passive(u, 'regen');
-    if (regen && u.hp > 0) u.hp = Math.min(u.maxHp, u.hp + u.maxHp * regen.amount * dt);
+    if (regen && u.hp > 0 && !(u.cursed > 0)) u.hp = Math.min(u.maxHp, u.hp + u.maxHp * regen.amount * dt);
   }
 }
 
@@ -106,8 +107,8 @@ function alive() {
   return state.badGuys.filter(b => b.hp > 0);
 }
 
-function pickBad(g, pick, n = 1) {
-  const list = alive();
+function pickBad(g, pick, n = 1, allowed = () => true) {
+  const list = alive().filter(allowed);
   if (pick === 'random') {
     for (let i = list.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -161,7 +162,8 @@ function apply(g, p) {
   const color = COLOR[p.type];
   switch (p.type) {
     case 'suck': {
-      const [t] = pickBad(g, p.pick);
+      // Bosses can't be sucked up.
+      const [t] = pickBad(g, p.pick, 1, b => !BAD_GUY_DEFS[b.id].boss);
       if (!t) return false;
       beam(g, t, color);
       addEffect('suck', cellX(t.col), cellY(t.row), { color });
@@ -207,6 +209,8 @@ function apply(g, p) {
       if (!targets.length) return false;
       const key = { stun: 'stun', slow: 'slowTime', weaken: 'weak', charm: 'charm' }[p.type];
       for (const t of targets) {
+        // Bosses shrug off stun and charm.
+        if ((p.type === 'stun' || p.type === 'charm') && BAD_GUY_DEFS[t.id].boss) continue;
         if (p.type === 'poison') t.poison = { dps: p.dps, t: p.duration };
         else t[key] = Math.max(t[key] || 0, p.duration);
         if (!center && p.area !== 'all') beam(g, t, color);
@@ -216,7 +220,8 @@ function apply(g, p) {
       return true;
     }
     case 'heal': {
-      const team = goodGroup(g, p.who).filter(u => u.hp < u.maxHp);
+      // The boss's Weakness Curse stops cursed good guys from being healed.
+      const team = goodGroup(g, p.who).filter(u => u.hp < u.maxHp && !(u.cursed > 0));
       if (!team.length) return false;
       for (const u of team) {
         u.hp = Math.min(u.maxHp, u.hp + u.maxHp * p.amount);

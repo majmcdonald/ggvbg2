@@ -8,6 +8,7 @@ import {
   chooseSave, openSaves, tapDelete, createSave, renameSave, saveName,
 } from './state.js';
 import { saveSlotButtons } from './render/saves.js';
+import { introCanContinue } from './render/intro.js';
 import {
   wardrobeBackButton, wardrobeUnitButtons, wardrobeItemButtons, wardrobeTabs, rollButton,
   prevPageButton, nextPageButton, pageCount, pageOf,
@@ -36,6 +37,10 @@ export function initInput(canvas) {
 
 function handleTap(x, y) {
   if (isNameDialogOpen()) return;
+  if (state.phase === 'intro') {
+    if (introCanContinue()) startLevel(0);
+    return;
+  }
   if (state.phase === 'saves') return tapSaves(x, y);
   if (state.phase === 'menu') return tapMenu(x, y);
   if (state.phase === 'prepare') return tapPrepare(x, y);

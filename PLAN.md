@@ -111,6 +111,7 @@ Implemented roles (draft stats in `js/data/goodGuys.js`; pending confirmation):
 | Spear Bad Guy | Ranged, range 5 | hp 90, 12.8 dmg/s, reward 20 |
 | Triple Boomerang Bad Guy | Throws 3 orange boomerangs at once at 3 different good guys within range 4; they return and can clip one more. Introduced in Level 4 | hp 120, 3 x 10 dmg every 1.7s, reward 35 |
 | Karate Bad Guy | Every 5s a flurry of 5 quick long-range energy punches (6 each) on the nearest good guy within 6 cells; a stun breaks the flurry. Introduced in Level 5 | hp 130, reward 30 |
+| Giant Skeleton (boss) | Level 10 boss level: on the field for the whole level; waves end at breaks when his HP reaches 2/3 and 1/3 (minions leave, player adds good guys); defeating him wins. 6500 HP, drawn twice as big, boss health bar. Every 3s (2s when below half HP) does the next action: Skull Shower (skulls fall on 6 random good guys, 40 each; dodge by moving), Rise minions (3 random bad guys, max 8; when angry always 10, no max, space allowing), Bone Throw (70 at the strongest good guy), Weakness Curse (all good guys half damage and can't be healed — heal powers, regen, life steal — for 12s; a break lifts it), Bone Mend (heal 20% if hurt; blocked, wasting the turn, while a good guy wearing healing clothes — heal, regen or life steal power — is on the field). Immune to suck, stun and charm | reward 200 |
 | Invisible Ball Bad Guy | Rolls an invisible ball down its own row (fires when a good guy is in its row within 6); the ball passes through the first good guy, turns visible, hits the next one for 30 and stops; rolls to the back of the castle. Introduced in Level 3 | hp 110, 30 dmg every 2s, reward 30 |
 
 Later versions add bad guys; `BAD_GUY_DEFS` is data-only so additions require no engine changes beyond special abilities.
@@ -121,6 +122,7 @@ Later versions add bad guys; `BAD_GUY_DEFS` is data-only so additions require no
 - 13 levels: level 1 teaches place + Start Wave with Money Man and Boomerang Man; each later level unlocks one good guy, so all 14 are available by level 13.
 - Loadout: up to 7 good guys (one tray row). The prepare screen appears from level 7, when more than 7 are unlocked. It defaults to new units, then the last loadout used.
 - Five named save slots (`ggvbg2.save1`..`save5` in localStorage), chosen on the start screen; a new save asks for a name (HTML text box over the canvas, max 16 characters) and can be renamed; each holds unlocked/cleared levels, last loadout, coins and clothes. The pre-slots save (`ggvbg2.progress`) becomes Save 1. Delete takes two taps. Sandbox saves nothing.
+- Starting a new save plays an intro: black screen fading in over 3s, a looping mini fight beside "Floor 1" and "Side by Side"; tap (after 1s) starts Level 1.
 - Unlock: each level introduces one good guy, as ggvbg.
 - Endless: formation generator scales bad-guy count/mix per wave; reinforcements between waves; score = waves survived.
 
