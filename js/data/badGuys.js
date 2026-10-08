@@ -34,6 +34,23 @@ export const BAD_GUY_DEFS = {
     actionEvery: 3, angryEvery: 2,
     color: '#e0e0e0',
   },
+  // Fights like a normal Bad Guy, but when defeated 5 more bad guys burst out of him.
+  spawner: {
+    id: 'spawner', name: 'Spawner Bad Guy', short: 'Spawner',
+    hp: 100, range: 4, dmg: 8, fireRate: 1.0, reward: 25,
+    projectile: 'rock', projSpeed: 5,
+    spawnOnDefeat: { count: 5, types: ['normal', 'spear'] },
+    color: '#2e7d32',
+  },
+  // Hits hard with dark orbs. After fighting for 10s he opens one huge black hole
+  // (js/blackholes.js) on the good guy nearest him.
+  blackhole: {
+    id: 'blackhole', name: 'Black Hole Bad Guy', short: 'Black Hole',
+    hp: 300, range: 5, dmg: 22, fireRate: 0.8, reward: 40,
+    projectile: 'darkorb', projSpeed: 5,
+    blackHole: { after: 10, radius: 2, duration: 4, dps: 25, suckBelow: 0.75 },
+    color: '#311b92',
+  },
   // Rolls an invisible ball along its row. The ball passes through the first good guy it
   // reaches without hurting them, turns visible, and hits the next one.
   ghostball: {

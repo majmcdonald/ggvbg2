@@ -25,6 +25,7 @@ export const state = {
   badGuys: [],
   floaties: [],   // [{ row, col }] pool cells with a Floaty, so good guys can stand there
   projectiles: [],
+  blackHoles: [],   // open black holes from Black Hole Bad Guys
   effects: [],
   idleTime: 0,
   stalled: false,
@@ -65,6 +66,7 @@ export function startLevel(index, options = {}) {
   state.badGuys = [];
   state.floaties = [];
   state.projectiles = [];
+  state.blackHoles = [];
   state.effects = [];
   state.selection = null;
   state.battleTime = 0;

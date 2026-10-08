@@ -18,8 +18,9 @@ function cardRect(i, count) {
 
 // Sandbox: the tray can show the bad guys instead, and they're free.
 function drawBadTray(ctx) {
-  Object.values(BAD_GUY_DEFS).forEach((def, i) => {
-    const r = cardRect(i, 1);
+  const defs = Object.values(BAD_GUY_DEFS);
+  defs.forEach((def, i) => {
+    const r = cardRect(i, defs.length);
     const selected = state.selection?.badId === def.id;
     ctx.fillStyle = selected ? '#5a2d2d' : '#2c2c2c';
     ctx.beginPath();
@@ -28,9 +29,20 @@ function drawBadTray(ctx) {
     ctx.strokeStyle = selected ? '#e74c3c' : '#555';
     ctx.lineWidth = selected ? 3 : 1;
     ctx.stroke();
-    drawCharacter(ctx, def.id, 'bad', r.x + r.w / 2, r.y + 30, 52, { t: state.time });
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
+    if (r.compact) {
+      // Two rows of small cards once there are more than 7 bad guys.
+      drawCharacter(ctx, def.id, 'bad', r.x + 16, r.y + r.h / 2 + 2, 30, { t: state.time });
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillText(def.short, r.x + r.w / 2 + 12, r.y + 20);
+      ctx.fillStyle = '#e74c3c';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText('Free', r.x + r.w / 2 + 12, r.y + 36);
+      return;
+    }
+    drawCharacter(ctx, def.id, 'bad', r.x + r.w / 2, r.y + 30, 52, { t: state.time });
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 10px sans-serif';
     ctx.fillText(def.short, r.x + r.w / 2, r.y + 62);
@@ -41,7 +53,8 @@ function drawBadTray(ctx) {
   ctx.fillStyle = '#aaa';
   ctx.font = '13px sans-serif';
   ctx.textAlign = 'left';
-  const textX = CARD_PAD + Object.keys(BAD_GUY_DEFS).length * (CARD_W + CARD_PAD) + 8;
+  const textX = CARD_PAD + defs.length * (CARD_W + CARD_PAD) + 8;
+  if (textX > CW - 110) return;   // no room for the hint once the tray is full
   ctx.fillText('Tap a bad guy,', textX, HUD_H + 40);
   ctx.fillText('then the red side.', textX, HUD_H + 58);
   ctx.fillText('Tap a placed bad', textX, HUD_H + 80);

@@ -28,6 +28,8 @@ const BAD_LOOKS = {
   tripleboom: { skin: SKIN[3], hair: '#212121', hairStyle: 'spiky', hat: 'headband', hatColor: '#212121', shirt: '#d35400', pants: '#3e2723', belt: '#212121', item: 'boomerang', backItem: 'boomerang', beltItem: 'boomerang', angry: true },
   karate: { skin: SKIN[1], hair: '#212121', hairStyle: 'short', hat: 'headband', hatColor: '#c0392b', shirt: '#f5f5f5', pants: '#f5f5f5', belt: '#111', gi: true, angry: true },
   skeletonboss: { object: 'skeleton' },
+  spawner: { skin: SKIN[3], hair: '#212121', hairStyle: 'short', hat: 'hood', hatColor: '#1b5e20', mask: true, shirt: '#2e7d32', pants: '#212121', belt: '#5d4037', item: 'rock', beltItem: 'eggs', angry: true },
+  blackhole: { skin: SKIN[0], hair: '#212121', hairStyle: 'short', hat: 'hood', hatColor: '#1a0033', mask: true, shirt: '#311b92', pants: '#12002a', belt: '#7c4dff', item: 'darkorb', angry: true },
   ghostball: { skin: SKIN[4], hair: '#212121', hairStyle: 'short', hat: 'hood', hatColor: '#004d40', mask: true, shirt: '#00897b', pants: '#263238', belt: '#004d40', item: 'magicball', angry: true },
 };
 
@@ -1191,6 +1193,17 @@ function drawItem(ctx, item, x, y, rot) {
     case 'ball':
       ellipse(ctx, 3, -3, 6, 6, '#ecf0f1');
       limb(ctx, -3, -3, 9, -3, 1.5, '#e74c3c');
+      break;
+    case 'eggs':
+      // A pouch of eggs: little bad guys waiting to hatch
+      ellipse(ctx, 0, 2, 6, 5, '#8d6e63');
+      for (const [x, y] of [[-3, -2], [0, -4], [3, -2]]) ellipse(ctx, x, y, 2.2, 2.8, '#c5e1a5');
+      break;
+    case 'darkorb':
+      ctx.fillStyle = 'rgba(124,77,255,0.45)';
+      ctx.beginPath(); ctx.arc(3, -4, 8, 0, Math.PI * 2); ctx.fill();
+      ellipse(ctx, 3, -4, 5, 5, '#12002a');
+      ellipse(ctx, 1.5, -5.5, 1.3, 1.3, 'rgba(179,136,255,0.9)');
       break;
     case 'magicball':
       ctx.fillStyle = 'rgba(186,104,200,0.35)';

@@ -5,7 +5,12 @@ export function drawProjectiles(ctx) {
   for (const p of state.projectiles) {
     ctx.save();
     ctx.translate(p.x, p.y);
-    if (p.kind === 'skull') {
+    if (p.kind === 'darkorb') {
+      ctx.fillStyle = 'rgba(124,77,255,0.45)';
+      ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#12002a';
+      ctx.beginPath(); ctx.arc(0, 0, 7, 0, Math.PI * 2); ctx.fill();
+    } else if (p.kind === 'skull') {
       ctx.rotate(Math.sin(p.angle) * 0.4);
       ctx.fillStyle = '#eeeeee';
       ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill();

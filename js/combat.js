@@ -6,7 +6,8 @@ import { state, flash, addEffect, completeLevel } from './state.js';
 import { onWaveCleared, bossBreakReached } from './waves.js';
 import { earn, updateIncome } from './economy.js';
 import { applyDamage, updatePowers, updateStatuses } from './powers.js';
-import { updateBosses, updateSkull, isBoss } from './boss.js';
+import { updateBosses, updateSkull, isBoss, spawnBadGuys } from './boss.js';
+import { updateBlackHoles } from './blackholes.js';
 
 const STALEMATE_HINT_AFTER = 3;
 const SLOW_FACTOR = 0.5;
@@ -97,6 +98,7 @@ export function updateBattle(dt) {
   updateStatuses(dt);
   updatePowers(dt);
   updateBosses(dt);
+  updateBlackHoles(dt);
   runSide('good', dt);
   runSide('bad', dt);
   updateProjectiles(dt);
@@ -335,17 +337,25 @@ function updateBall(p, step) {
 }
 
 function removeDefeated() {
+  const spawners = [];
   for (const side of ['good', 'bad']) {
     const defs = defsOf(side);
     for (const u of unitsOf(side)) {
       if (u.hp > 0) continue;
       addEffect('defeat', cellX(u.col), cellY(u.row), { color: defs[u.id].color });
       if (side === 'bad') earn(defs[u.id].reward, u);
+      if (side === 'bad' && defs[u.id].spawnOnDefeat) spawners.push(u);
     }
   }
   if (state.selection?.unit && state.selection.unit.hp <= 0) state.selection = null;
   state.goodGuys = state.goodGuys.filter(u => u.hp > 0);
   state.badGuys = state.badGuys.filter(u => u.hp > 0);
+  // Spawner Bad Guys burst into more bad guys once they're gone (so their own cell is free).
+  for (const u of spawners) {
+    const spec = BAD_GUY_DEFS[u.id].spawnOnDefeat;
+    spawnBadGuys(u, spec.count, spec.types, '#66bb6a');
+    addEffect('powertext', cellX(u.col), cellY(u.row) - 40, { text: 'Surprise!', color: '#66bb6a', big: true });
+  }
 }
 
 function sideCanAttack(side) {

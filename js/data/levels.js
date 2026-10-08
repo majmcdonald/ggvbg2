@@ -6,6 +6,8 @@ const g = (row, col) => ({ type: 'ghostball', row, col });
 const t = (row, col) => ({ type: 'tripleboom', row, col });
 const k = (row, col) => ({ type: 'karate', row, col });
 const boss = (row, col) => ({ type: 'skeletonboss', row, col });
+const bh = (row, col) => ({ type: 'blackhole', row, col });
+const sp = (row, col) => ({ type: 'spawner', row, col });
 
 // Levels 11+: the good guys hold a 4x4 square in the middle, bad guys stand all around it.
 const MIDDLE = { colMin: 2, colMax: 5, rowMin: 2, rowMax: 5 };
@@ -173,22 +175,24 @@ export const LEVELS = [
     number: 11,
     startMoney: 600,
     newUnits: ['minibomb'],
+    newBadGuys: ['blackhole'],
     ...SURROUND,
     waves: [
       { spawns: [n(0, 3), n(3, 7), n(7, 4), n(4, 0)] },
-      { spawns: [n(1, 2), s(3, 7), n(4, 6), s(7, 4), n(4, 0)] },
-      { spawns: [n(0, 3), s(0, 6), n(3, 6), s(7, 1), n(6, 4), n(2, 0)] },
+      { spawns: [n(1, 2), s(3, 7), bh(4, 6), s(7, 4), n(4, 0)] },
+      { spawns: [n(0, 3), s(0, 6), bh(3, 6), s(7, 1), n(6, 4), bh(2, 0)] },
     ],
   },
   {
     number: 12,
     startMoney: 650,
     newUnits: ['wallofdoom'],
+    newBadGuys: ['spawner'],
     ...SURROUND,
     waves: [
       { spawns: [n(1, 3), n(3, 6), n(6, 4), n(4, 1)] },
-      { spawns: [n(1, 2), n(3, 6), n(5, 6), n(6, 3), n(4, 1), s(0, 7)] },
-      { spawns: [n(1, 2), n(1, 5), n(3, 6), n(4, 6), n(6, 2), n(5, 1), s(0, 0), s(7, 7)] },
+      { spawns: [n(1, 2), sp(3, 6), n(6, 3), n(4, 1)] },
+      { spawns: [sp(1, 2), n(3, 6), n(4, 6), sp(6, 5), s(0, 0), s(7, 7)] },
     ],
   },
   {

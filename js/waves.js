@@ -28,6 +28,7 @@ export function startWave() {
   for (const u of [...state.goodGuys, ...state.badGuys]) u.cooldown = Math.random() * 0.5;
   state.idleTime = 0;
   state.stalled = false;
+  state.blackHoles = [];
   state.selection = null;
   state.phase = 'battle';
 }

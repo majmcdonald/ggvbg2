@@ -1,11 +1,11 @@
-import { CELL, ROWS, GRID_TOP, cellX, cellY } from './config.js';
+import { CELL, ROWS, COLS, GRID_TOP, cellX, cellY } from './config.js';
 import { GOOD_GUY_DEFS } from './data/goodGuys.js';
 import { BAD_GUY_DEFS } from './data/badGuys.js';
 import { isRock, isPool, inZone } from './data/terrain.js';
 import { state, addEffect, makeBadGuy, badGuyAt } from './state.js';
 
-// The Giant Skeleton's actions, in order. Heal is skipped (Skull Shower instead) when it isn't hurt.
-const ROTATION = ['skullshower', 'summon', 'bonethrow', 'weaken', 'skullshower', 'heal'];
+// The Giant Skeleton's actions, in order. Heal is skipped (Bone Throw instead) when it isn't hurt.
+const ROTATION = ['skullshower', 'summon', 'bonethrow', 'weaken', 'skullshower', 'bonethrow', 'heal'];
 const NAMES = {
   skullshower: 'Skull Shower!', summon: 'Rise, minions!', bonethrow: 'Bone Throw!', weaken: 'Weakness Curse!', heal: 'Bone Mend!',
 };
@@ -33,7 +33,7 @@ export function updateBosses(dt) {
 function act(boss) {
   boss.actionIndex = ((boss.actionIndex ?? -1) + 1) % ROTATION.length;
   let action = ROTATION[boss.actionIndex];
-  if (action === 'heal' && boss.hp > boss.maxHp * 0.9) action = 'skullshower';
+  if (action === 'heal' && boss.hp > boss.maxHp * 0.9) action = 'bonethrow';
   const targets = state.goodGuys.filter(g => g.hp > 0 && !GOOD_GUY_DEFS[g.id].untargetable);
 
   boss.attackAnim = 0.5;
@@ -90,29 +90,31 @@ export function healingClothesOnField() {
 
 // New minions appear on free enemy cells closest to the boss.
 function summon(boss) {
-  const level = state.level;
   const minions = state.badGuys.filter(b => !BAD_GUY_DEFS[b.id].boss).length;
   const angry = boss.hp < boss.maxHp / 2;
   const room = angry ? ANGRY_SUMMON_COUNT : Math.min(SUMMON_COUNT, MAX_MINIONS - minions);
+  // The boss is drawn over the cells around it, so minions don't appear there.
+  const nearBoss = (r, c) => Math.abs(r - boss.row) <= 1 && Math.abs(c - boss.col) <= 1;
+  spawnBadGuys(boss, room, MINION_TYPES, PURPLE, nearBoss);
+}
+
+// Puts up to `count` new bad guys (random from `types`) on free enemy-zone cells closest to `near`.
+export function spawnBadGuys(near, count, types, color, skip = () => false) {
+  const level = state.level;
   const free = [];
   for (let r = 0; r < ROWS; r++) {
-    for (let c = level.enemyZone.colMin; c <= level.enemyZone.colMax; c++) {
-      if (isRock(level, r, c) || isPool(level, r, c) || badGuyAt(r, c) || nearBoss(boss, r, c)) continue;
-      free.push({ r, c, d: Math.abs(r - boss.row) + Math.abs(c - boss.col) });
+    for (let c = 0; c < COLS; c++) {
+      if (!inZone(level.enemyZone, r, c) || isRock(level, r, c) || isPool(level, r, c) || badGuyAt(r, c) || skip(r, c)) continue;
+      free.push({ r, c, d: Math.abs(r - near.row) + Math.abs(c - near.col) });
     }
   }
   free.sort((a, b) => a.d - b.d);
-  for (const { r, c } of free.slice(0, Math.max(0, room))) {
-    const m = makeBadGuy(MINION_TYPES[Math.floor(Math.random() * MINION_TYPES.length)], r, c);
+  for (const { r, c } of free.slice(0, Math.max(0, count))) {
+    const m = makeBadGuy(types[Math.floor(Math.random() * types.length)], r, c);
     m.cooldown = 1;
     state.badGuys.push(m);
-    addEffect('ring', cellX(c), cellY(r), { radius: CELL * 0.6, color: PURPLE });
+    addEffect('ring', cellX(c), cellY(r), { radius: CELL * 0.6, color });
   }
-}
-
-// The boss is drawn over the cells around it, so minions don't spawn there.
-function nearBoss(boss, r, c) {
-  return Math.abs(r - boss.row) <= 1 && Math.abs(c - boss.col) <= 1;
 }
 
 // Falling skulls drop straight down onto where their target stood.

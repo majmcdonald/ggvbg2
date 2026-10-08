@@ -14,6 +14,7 @@ import { drawWardrobe } from './render/wardrobe.js';
 import { drawSaves } from './render/saves.js';
 import { drawIntro } from './render/intro.js';
 import { drawFireworks } from './render/fireworks.js';
+import { drawBlackHoles } from './blackholes.js';
 
 const canvas = document.getElementById('canvas');
 canvas.width = CW;
@@ -75,6 +76,7 @@ function draw() {
   drawHud(ctx);
   drawTray(ctx);
   drawGrid(ctx);
+  drawBlackHoles(ctx);
   for (const g of state.goodGuys) drawUnit(ctx, g, GOOD_GUY_DEFS[g.id], 'good', state.selection?.unit === g);
   for (const b of state.badGuys) drawUnit(ctx, b, BAD_GUY_DEFS[b.id], 'bad', false);
   drawFacingButtons(ctx);
